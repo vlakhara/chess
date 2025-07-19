@@ -1,36 +1,91 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ♟️ Chess Game – Multiplayer in Next.js
 
-## Getting Started
+A fully functional Chess game built with **Next.js** and **TypeScript**, featuring:
 
-First, run the development server:
+- Full move validation including check, checkmate, castling, and en passant  
+- Multiplayer support via **WebSockets**  
+- All game logic handled on the **frontend**  
+- Clean and responsive UI with end-game animations
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+---
+
+## 📸 Preview
+
+![Chess Game Screenshot](./public/chess-preview.png)
+
+## 🚀 Features
+
+- ♜ Valid move generation for all pieces  
+- 🧠 Separation of `getPseudoLegalMoves` and `getValidMoves`  
+- 🔒 King safety checks and castling logic (with square clearance & threat checks)  
+- 🏁 Checkmate and stalemate detection  
+- ♻️ Move history tracking  
+- ⚡ Fully client-side rule engine  
+- 🔌 Real-time multiplayer via Socket.IO *(WIP)*  
+- 🎨 Visual effects for end-game  
+
+---
+
+## 🧠 Architecture
+
+```
+Frontend:  Next.js + TypeScript  
+Game Engine: Custom logic written entirely in TypeScript  
+Multiplayer: Socket.IO (backend handles only socket transport)  
+State: React Hooks  
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📦 Getting Started
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+# 1. Clone the repository
+git clone git@github.com:vlakhara/chess.git
+cd chess
 
-## Learn More
+# 2. Install dependencies
+npm install
 
-To learn more about Next.js, take a look at the following resources:
+# 3. Run the development server
+npm run dev
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# App runs at http://localhost:3000
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 📅 Roadmap
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- [x] Complete chess rules  
+- [x] En passant & castling  
+- [x] Checkmate/stalemate detection  
+- [x] Move history  
+- [ ] Real-time multiplayer (Socket.IO)  
+- [ ] Timed games / Blitz mode  
+- [ ] Spectator mode  
+- [ ] Mobile responsiveness  
+- [ ] Match history & analytics  
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## 🧑‍💻 Author
+
+**Vipul Lakhara**  
+GitHub: [@vlakhara](https://github.com/vlakhara)  
+💼 Software Development Engineer | Chess + Code Enthusiast  
+💬 Open to collaboration and feedback
+
+---
+
+## 🤝 Contributing
+
+Pull requests are welcome.  
+For major changes, open an issue first to discuss what you’d like to change.
+
+---
+
+## 📄 License
+
+**MIT License**  
+Free to use and modify. Attribution appreciated but not required.
