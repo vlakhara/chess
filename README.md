@@ -47,11 +47,31 @@ cd chess
 # 2. Install dependencies
 npm install
 
-# 3. Run the development server
+# 3. Set up environment variables
+cp .env.example .env.local
+# Edit .env.local with your WebSocket server URL
+
+# 4. Run the development server
 npm run dev
 
 # App runs at http://localhost:3000
 ```
+
+## 🔧 Environment Configuration
+
+Create a `.env.local` file in the frontend directory with the following variables:
+
+```env
+# WebSocket server URL for multiplayer functionality
+NEXT_PUBLIC_SOCKET_URL=ws://localhost:8000/chess
+```
+
+For production, use:
+```env
+NEXT_PUBLIC_SOCKET_URL=wss://your-production-domain.com/chess
+```
+
+**Note:** The `NEXT_PUBLIC_` prefix is required for Next.js to expose the variable to the browser.
 
 ---
 
@@ -61,7 +81,7 @@ npm run dev
 - [x] En passant & castling  
 - [x] Checkmate/stalemate detection  
 - [x] Move history  
-- [ ] Real-time multiplayer (Socket.IO)  
+- [x] Real-time multiplayer (Socket.IO)  
 - [ ] Timed games / Blitz mode  
 - [ ] Spectator mode  
 - [ ] Mobile responsiveness  

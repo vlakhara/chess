@@ -1,26 +1,31 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { PieceTypes } from "@/brain/types";
+import { PieceType } from "@/brain/types";
 
 interface PromotionDialogProps {
   isOpen: boolean;
   color: "white" | "black";
-  onChoose: (pieceType: PieceTypes) => void;
+  onChoose: (pieceType: PieceType) => void;
   onClose: () => void;
 }
 
 const CHARACTER_MAP: Record<
-  Exclude<PieceTypes, PieceTypes.KING | PieceTypes.PAWN>,
+  Exclude<PieceType, PieceType.KING | PieceType.PAWN>,
   { white: string; black: string }
 > = {
-  [PieceTypes.QUEEN]: { white: "♕", black: "♛" },
-  [PieceTypes.ROOK]: { white: "♖", black: "♜" },
-  [PieceTypes.BISHOP]: { white: "♗", black: "♝" },
-  [PieceTypes.KNIGHT]: { white: "♘", black: "♞" },
+  [PieceType.QUEEN]: { white: "♕", black: "♛" },
+  [PieceType.ROOK]: { white: "♖", black: "♜" },
+  [PieceType.BISHOP]: { white: "♗", black: "♝" },
+  [PieceType.KNIGHT]: { white: "♘", black: "♞" },
 };
 
-const PromotionDialog: React.FC<PromotionDialogProps> = ({ isOpen, color, onChoose, onClose }) => {
+const PromotionDialog: React.FC<PromotionDialogProps> = ({
+  isOpen,
+  color,
+  onChoose,
+  onClose,
+}) => {
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
@@ -48,6 +53,7 @@ const PromotionDialog: React.FC<PromotionDialogProps> = ({ isOpen, color, onChoo
         justifyContent: "center",
         zIndex: 1000,
         backdropFilter: "blur(5px)",
+        padding: "20px",
       }}
       onClick={onClose}
     >
@@ -55,19 +61,19 @@ const PromotionDialog: React.FC<PromotionDialogProps> = ({ isOpen, color, onChoo
         style={{
           backgroundColor: "#1a1a1a",
           borderRadius: "20px",
-          padding: "40px 30px",
+          padding: "clamp(20px, 5vw, 40px) clamp(15px, 3vw, 30px)",
           textAlign: "center",
-          maxWidth: "400px",
-          width: "90%",
+          maxWidth: "min(90vw, 400px)",
+          width: "100%",
           border: "2px solid #333",
           boxShadow: "0 20px 40px rgba(0, 0, 0, 0.5)",
           animation: "slideIn 0.3s ease-out",
         }}
-        onClick={e => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
       >
         <h2
           style={{
-            fontSize: "2rem",
+            fontSize: "clamp(1.2rem, 3vw, 2rem)",
             fontWeight: "bold",
             marginBottom: "20px",
             color: "#FFFFFF",
@@ -77,13 +83,23 @@ const PromotionDialog: React.FC<PromotionDialogProps> = ({ isOpen, color, onChoo
         >
           Choose Promotion
         </h2>
-        <div style={{ display: "flex", justifyContent: "center", gap: "30px", marginBottom: "30px" }}>
-          {([
-            PieceTypes.QUEEN,
-            PieceTypes.ROOK,
-            PieceTypes.BISHOP,
-            PieceTypes.KNIGHT,
-          ] as const).map((type) => (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            gap: "clamp(15px, 3vw, 30px)",
+            marginBottom: "30px",
+            flexWrap: "wrap",
+          }}
+        >
+          {(
+            [
+              PieceType.QUEEN,
+              PieceType.ROOK,
+              PieceType.BISHOP,
+              PieceType.KNIGHT,
+            ] as const
+          ).map((type) => (
             <button
               key={type}
               onClick={() => onChoose(type)}
@@ -91,20 +107,27 @@ const PromotionDialog: React.FC<PromotionDialogProps> = ({ isOpen, color, onChoo
                 background: "none",
                 border: "2px solid #4A9782",
                 borderRadius: "10px",
-                padding: "15px 20px",
+                padding: "clamp(10px, 2vw, 15px) clamp(15px, 3vw, 20px)",
                 cursor: "pointer",
-                fontSize: "2.5rem",
+                fontSize: "clamp(1.5rem, 5vw, 2.5rem)",
                 color: color === "white" ? "#fff" : "#222",
                 backgroundColor: color === "white" ? "#4A9782" : "#FCEF91",
                 transition: "all 0.2s ease",
                 boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+                minWidth: "clamp(50px, 12vw, 80px)",
+                minHeight: "clamp(50px, 12vw, 80px)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
               }}
-              onMouseEnter={e => {
-                e.currentTarget.style.backgroundColor = color === "white" ? "#5BA892" : "#FCEF91CC";
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor =
+                  color === "white" ? "#5BA892" : "#FCEF91CC";
                 e.currentTarget.style.transform = "scale(1.08)";
               }}
-              onMouseLeave={e => {
-                e.currentTarget.style.backgroundColor = color === "white" ? "#4A9782" : "#FCEF91";
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor =
+                  color === "white" ? "#4A9782" : "#FCEF91";
                 e.currentTarget.style.transform = "scale(1)";
               }}
             >
@@ -119,19 +142,19 @@ const PromotionDialog: React.FC<PromotionDialogProps> = ({ isOpen, color, onChoo
             color: "#fff",
             border: "none",
             borderRadius: "10px",
-            padding: "10px 25px",
-            fontSize: "1rem",
+            padding: "clamp(8px, 2vw, 10px) clamp(15px, 3vw, 25px)",
+            fontSize: "clamp(0.9rem, 2.5vw, 1rem)",
             fontWeight: "bold",
             cursor: "pointer",
             transition: "all 0.2s ease",
             textTransform: "uppercase",
             letterSpacing: "1px",
           }}
-          onMouseEnter={e => {
+          onMouseEnter={(e) => {
             e.currentTarget.style.backgroundColor = "#444";
             e.currentTarget.style.transform = "scale(1.05)";
           }}
-          onMouseLeave={e => {
+          onMouseLeave={(e) => {
             e.currentTarget.style.backgroundColor = "#333";
             e.currentTarget.style.transform = "scale(1)";
           }}

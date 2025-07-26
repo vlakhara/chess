@@ -11,7 +11,7 @@ import {
   Move,
   Piece,
   PIECE_MOVE,
-  PieceTypes,
+  PieceType,
   PieceWithPosition,
   Position,
 } from "./types";
@@ -27,7 +27,7 @@ export const getValidMoves = (
   const moves: Position[] = [];
 
   switch (piece.type) {
-    case PieceTypes.PAWN: {
+    case PieceType.PAWN: {
       const direction = piece.color === "white" ? -1 : 1;
 
       const oneStep = x + direction;
@@ -51,7 +51,7 @@ export const getValidMoves = (
         if (
           opponent &&
           wasEnPassant &&
-          opponent.type === PieceTypes.PAWN &&
+          opponent.type === PieceType.PAWN &&
           opponent.color !== piece.color
         ) {
           const willKingBeSafe = willKingBeSafeAfterMove(
@@ -83,7 +83,7 @@ export const getValidMoves = (
         if (
           opponent &&
           wasEnPassant &&
-          opponent.type === PieceTypes.PAWN &&
+          opponent.type === PieceType.PAWN &&
           opponent.color !== piece.color
         ) {
           const willKingBeSafe = willKingBeSafeAfterMove(
@@ -151,7 +151,7 @@ export const getValidMoves = (
 
       return moves;
     }
-    case PieceTypes.KNIGHT: {
+    case PieceType.KNIGHT: {
       KNIGHT_MOVES.forEach((move) => {
         const newX = x + move.dx;
         const newY = y + move.dy;
@@ -179,16 +179,16 @@ export const getValidMoves = (
 
       return moves;
     }
-    case PieceTypes.BISHOP: {
+    case PieceType.BISHOP: {
       return getSlidingMoves(piece, position, BISHOP_MOVES, board, true);
     }
-    case PieceTypes.ROOK: {
+    case PieceType.ROOK: {
       return getSlidingMoves(piece, position, ROOK_MOVES, board, true);
     }
-    case PieceTypes.QUEEN: {
+    case PieceType.QUEEN: {
       return getSlidingMoves(piece, position, QUEEN_MOVES, board, true);
     }
-    case PieceTypes.KING: {
+    case PieceType.KING: {
       const { canCastleLeft, canCastleRight } = canKingCastle(
         board,
         piece.color
@@ -247,7 +247,7 @@ export const getPseudoLegalMoves = (
   const moves: Position[] = [];
 
   switch (piece.type) {
-    case PieceTypes.PAWN: {
+    case PieceType.PAWN: {
       const direction = piece.color === "white" ? -1 : 1;
 
       const oneStep = x + direction;
@@ -270,7 +270,7 @@ export const getPseudoLegalMoves = (
         if (
           opponent &&
           wasEnPassant &&
-          opponent.type === PieceTypes.PAWN &&
+          opponent.type === PieceType.PAWN &&
           opponent.color !== piece.color
         ) {
           moves.push({ x: oneStep, y: y - 1 });
@@ -292,7 +292,7 @@ export const getPseudoLegalMoves = (
         if (
           opponent &&
           wasEnPassant &&
-          opponent.type === PieceTypes.PAWN &&
+          opponent.type === PieceType.PAWN &&
           opponent.color !== piece.color
         ) {
           moves.push({ x: oneStep, y: y + 1 });
@@ -322,7 +322,7 @@ export const getPseudoLegalMoves = (
 
       return moves;
     }
-    case PieceTypes.KNIGHT: {
+    case PieceType.KNIGHT: {
       KNIGHT_MOVES.forEach((move) => {
         const newX = x + move.dx;
         const newY = y + move.dy;
@@ -339,16 +339,16 @@ export const getPseudoLegalMoves = (
 
       return moves;
     }
-    case PieceTypes.BISHOP: {
+    case PieceType.BISHOP: {
       return getSlidingMoves(piece, position, BISHOP_MOVES, board);
     }
-    case PieceTypes.ROOK: {
+    case PieceType.ROOK: {
       return getSlidingMoves(piece, position, ROOK_MOVES, board);
     }
-    case PieceTypes.QUEEN: {
+    case PieceType.QUEEN: {
       return getSlidingMoves(piece, position, QUEEN_MOVES, board);
     }
-    case PieceTypes.KING: {
+    case PieceType.KING: {
       KING_MOVES.forEach((move) => {
         const newX = x + move.dx;
         const newY = y + move.dy;
@@ -434,7 +434,7 @@ export const movePiece = (
   const opponent = board[x][y];
 
   switch (piece.type) {
-    case PieceTypes.PAWN: {
+    case PieceType.PAWN: {
       const hasMovedStraight = currentY === y;
       const hasMovedDiagonal = Math.abs(currentY - y) === 1;
 
@@ -442,7 +442,7 @@ export const movePiece = (
       const canPerformEnPassant =
         isEmpty &&
         anotherOpponent !== null &&
-        anotherOpponent.type === PieceTypes.PAWN &&
+        anotherOpponent.type === PieceType.PAWN &&
         anotherOpponent.color !== piece.color;
       if (hasMovedDiagonal && canPerformEnPassant) {
         newBoard[currentX][currentY] = null;
@@ -461,10 +461,10 @@ export const movePiece = (
 
       return newBoard;
     }
-    case PieceTypes.BISHOP:
-    case PieceTypes.QUEEN:
-    case PieceTypes.ROOK:
-    case PieceTypes.KNIGHT: {
+    case PieceType.BISHOP:
+    case PieceType.QUEEN:
+    case PieceType.ROOK:
+    case PieceType.KNIGHT: {
       const opponent = newBoard[x][y];
       if (opponent) {
         if (!silent) new Audio("/sounds/capture.mp3").play();
@@ -475,7 +475,7 @@ export const movePiece = (
       newBoard[x][y] = { ...piece, hasMoved: true };
       return newBoard;
     }
-    case PieceTypes.KING: {
+    case PieceType.KING: {
       const opponent = newBoard[x][y];
       if (opponent) {
         if (!silent) new Audio("/sounds/capture.mp3").play();
@@ -510,7 +510,7 @@ export const getKing = (
     const pieces = board[i];
     for (let j = 0; j < pieces.length; j++) {
       const piece = pieces[j];
-      if (piece?.color === color && piece.type === PieceTypes.KING) {
+      if (piece?.color === color && piece.type === PieceType.KING) {
         return { piece, position: { x: i, y: j } };
       }
     }
@@ -524,7 +524,7 @@ export const isKingInCheck = (
 ): boolean => {
   const piece = board[kingPosition.x][kingPosition.y];
 
-  if (!piece || piece.type !== PieceTypes.KING) return false;
+  if (!piece || piece.type !== PieceType.KING) return false;
 
   const opponentPieces = getSameColoredPieces(
     board,
@@ -592,7 +592,7 @@ export const canKingCastle = (
   let canCastleLeft = false;
   let canCastleRight = false;
 
-  if (!kingPiece || kingPiece.piece.type !== PieceTypes.KING)
+  if (!kingPiece || kingPiece.piece.type !== PieceType.KING)
     return { canCastleLeft, canCastleRight };
   if (kingPiece.piece.hasMoved) return { canCastleLeft, canCastleRight };
 
@@ -681,7 +681,7 @@ export const canKingCastle = (
 
 export const promote = (
   board: Board,
-  promoteTo: PieceTypes,
+  promoteTo: PieceType,
   position: Position,
   color: "white" | "black"
 ): Board => {

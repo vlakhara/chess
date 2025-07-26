@@ -1,6 +1,5 @@
 "use client";
 
-import { getInitialBoard } from "@/brain/board";
 import {
   getKing,
   getValidMoves,
@@ -12,21 +11,40 @@ import {
 } from "@/brain/move";
 import {
   Board as BoardType,
-  CHARACTER_MAP,
+  GameState,
   Move,
   Piece,
-  PieceTypes,
+  PieceType,
+  Player,
   Position,
 } from "@/brain/types";
-import { useState } from "react";
-import History from "./History";
-import WinnerDialog from "./WinnerDialog";
 import confetti from "canvas-confetti";
+import { useEffect, useState } from "react";
+import History from "./History";
 import { usePromotionDialog } from "./usePromotionDialog";
+import WinnerDialog from "./WinnerDialog";
+import { onMessage, sendMessage, SocketMessage } from "@/lib/socket";
+import BoardLabel from "./BoardLabel";
+import BoardSquare from "./BoardSquare";
+import styles from "@/styles/Board.module.css";
 
-const Board = () => {
-  const [board, setBoard] = useState<BoardType>(getInitialBoard());
-  const [turn, setTurn] = useState<"white" | "black">("white");
+interface BoardProps {
+  player: Player;
+  opponent: Player;
+  isGameReady?: boolean;
+  game: GameState;
+  setGame: (game: GameState | null) => void;
+}
+
+const Board = ({
+  player,
+  opponent,
+  isGameReady = true,
+  game,
+  setGame,
+}: BoardProps) => {
+  const [board, setBoard] = useState<BoardType>([]);
+  const [turn, setTurn] = useState<"white" | "black">(player.color);
   const [activePiece, setActivePiece] = useState<Piece | null>(null);
   const [selectedPosition, setSelectedPosition] = useState<Position | null>(
     null
@@ -40,7 +58,36 @@ const Board = () => {
   const [isStalemate, setIsStalemate] = useState(false);
   const { askPromotion, dialog: promotionDialog } = usePromotionDialog();
 
+  useEffect(() => {
+    if (game.board) {
+      setBoard(game.board.pieces);
+    }
+    if (game.currentTurn) {
+      setTurn(game.currentTurn.color);
+    }
+    if (game.history) {
+      setHistory(game.history.moves);
+    }
+    if (game.winner) {
+      setWinner(game.winner.color);
+    }
+    setIsCheck(game.check);
+    setIsCheckMate(game.checkmate);
+    setIsStalemate(game.stalemate);
+
+    if (game.winner) {
+      setShowWinnerDialog(true);
+      setTimeout(() => {
+        handleClick();
+      }, 100);
+    }
+  }, [game]);
+
   const handleSquareClick = async (position: Position) => {
+    if (!isGameReady || player.color !== turn) {
+      return;
+    }
+
     const { x, y } = position;
     if (selectedPosition?.x === x && selectedPosition?.y === y) {
       setSelectedPosition(null);
@@ -60,9 +107,22 @@ const Board = () => {
 
       let _board = movePiece(board, selectedPosition, position);
       let choice = null;
+      let isCheck = false;
+      let isCheckMate = false;
+      let winner = null;
+      let isStalemate = false;
+      const nextTurn = turn === "white" ? "black" : "white";
+      const kingPiece = getKing(board, nextTurn);
+      const capturedPiece = board[position.x][position.y];
+      const _history: Move = {
+        from: selectedPosition,
+        to: position,
+        piece: activePiece,
+        capturedPiece: capturedPiece,
+      };
 
       if (
-        activePiece.type === PieceTypes.PAWN &&
+        activePiece.type === PieceType.PAWN &&
         ((activePiece.color === "white" && position.x === 0) ||
           (activePiece.color === "black" && position.x === 7))
       ) {
@@ -73,55 +133,64 @@ const Board = () => {
         _board = promote(_board, choice, position, activePiece.color);
       }
 
-      const capturedPiece = board[position.x][position.y];
-
-      const history: Move = {
-        from: selectedPosition,
-        to: position,
-        piece: activePiece,
-        capturedPiece: capturedPiece,
-      };
-
       if (choice) {
-        history.isPromoted = Boolean(choice);
-        history.promotedTo = choice;
+        _history.isPromoted = Boolean(choice);
+        _history.promotedTo = choice;
       }
 
       if (
-        activePiece.type === PieceTypes.KING &&
+        activePiece.type === PieceType.KING &&
         Math.abs(position.y - selectedPosition.y) === 2
       ) {
-        history.isCastle = true;
+        _history.isCastle = true;
       }
 
-      const nextTurn = turn === "white" ? "black" : "white";
-      const kingPiece = getKing(board, nextTurn);
-      let isCheck = false;
       if (kingPiece?.piece && kingPiece?.position) {
         isCheck = isKingInCheck(_board, kingPiece?.position);
       }
 
-      setHistory((prev) => [...prev, history]);
-      setBoard(_board);
-      setIsCheck(isCheck);
-      resetStates();
       if (isCheck) {
-        const isCheckMate = isKingCheckMate(_board, nextTurn);
-        if (isCheckMate) {
-          setWinner(turn);
-          setShowWinnerDialog(true);
-          setTimeout(() => {
-            handleClick();
-          }, 100);
-        }
-        setIsCheckMate(isCheckMate);
+        setIsCheck(isCheck);
+        isCheckMate = isKingCheckMate(_board, nextTurn);
       } else {
         if (!isAnyMoveLeft(_board, nextTurn)) {
-          setIsStalemate(true);
-          setShowWinnerDialog(true);
+          isStalemate = true;
         }
       }
-      setTurn(nextTurn);
+
+      if (isCheckMate) {
+        winner = turn;
+        setTimeout(() => {
+          handleClick();
+        }, 100);
+      }
+
+      if (winner) {
+        setShowWinnerDialog(true);
+      }
+      if (isStalemate) {
+        setShowWinnerDialog(true);
+      }
+
+      const _game: GameState = {
+        ...game,
+        history: {
+          moves: [...game.history.moves, _history],
+          lastMove: _history,
+        },
+        board: { pieces: _board },
+        currentTurn: nextTurn === player.color ? player : opponent,
+        winner: winner ? game.currentTurn : null,
+        check: isCheck,
+        checkmate: isCheckMate,
+        stalemate: isStalemate,
+      };
+
+      setGame(_game);
+      sendMessage("MOVE", {
+        game: _game,
+      });
+      resetStates();
     } else if (piece && piece.color === turn) {
       setActivePiece(piece);
       setSelectedPosition(position);
@@ -147,13 +216,14 @@ const Board = () => {
     setHistory([]);
     setTurn("white");
     setIsStalemate(false);
-    setBoard(getInitialBoard());
+    setBoard([]);
+    setGame(null);
   };
 
   const getSquareColor = (position: Position) => {
     const { x, y } = position;
     const piece = board[x][y];
-    const isKing = piece?.type === PieceTypes.KING;
+    const isKing = piece?.type === PieceType.KING;
 
     if (isCheck && isKing && piece.color === turn) {
       return "#8E1616";
@@ -197,66 +267,70 @@ const Board = () => {
     frame();
   };
 
+  useEffect(() => {
+    const handleMessage = (data: SocketMessage) => {
+      const { payload } = data;
+
+      if (data.type === "MOVED" && payload) {
+        const { game } = payload as { game: GameState };
+        setGame(game);
+      }
+
+      if (data.type === "OPPONENT_JOINED" && payload) {
+        const { game } = payload as { game: GameState };
+        setGame(game);
+      }
+    };
+
+    onMessage(handleMessage);
+
+    return () => {
+      // offMessage(handleMessage);
+    };
+  }, [setGame]);
+
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        height: "100vh",
-        width: "100vw",
-        gap: "20px",
-      }}
-    >
-      <div
-        style={{
-          height: "800px",
-          width: "800px",
-          boxShadow: "0 0 10px #fff",
-          borderRadius: "10px",
-          overflow: "hidden",
-          display: "grid",
-          gridTemplateColumns: "repeat(8, 1fr)",
-        }}
-      >
-        {board.map((row, x) =>
-          row.map((piece, y) => (
-            <div
-              key={`${x}-${y}`}
-              style={{
-                height: "100px",
-                width: "100px",
-                backgroundColor: getSquareColor({ x, y }),
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-              onClick={() => handleSquareClick({ x, y })}
-            >
-              <p
-                style={{
-                  fontSize: "5rem",
-                  color: piece?.color,
-                  cursor: "pointer",
-                  userSelect: "none",
-                  opacity: isCheckMate && piece?.color === turn ? 0.6 : 1,
-                  transform:
-                    activePiece?.id === piece?.id ? "scale(1.3)" : "scale(1)",
-                  transition: "transform 0.2s ease-in-out",
-                  display: "inline-block",
-                }}
-              >
-                {piece && CHARACTER_MAP[piece.type][piece.color]}
-              </p>
-            </div>
-          ))
-        )}
+    <div className={styles.container}>
+      <div className={styles.boardWrapper}>
+        {/* Opponent name - top left, outside board */}
+        <BoardLabel
+          text={opponent ? opponent.name : "Waiting for opponent..."}
+          position="top-left"
+          dark
+        />
+        {/* Player name - bottom right, outside board */}
+        <BoardLabel text={player.name} position="bottom-right" />
+        <div
+          className={styles.chessBoard}
+          style={{
+            transform: player.color === "black" ? "rotate(180deg)" : "none",
+          }}
+        >
+          {/* Chess board squares */}
+          {board.map((row, x) =>
+            row.map((piece, y) => (
+              <BoardSquare
+                key={`${x}-${y}`}
+                piece={piece}
+                position={{ x, y }}
+                isCheckMate={isCheckMate && piece?.color === turn}
+                isActive={activePiece?.id === piece?.id}
+                getSquareColor={getSquareColor}
+                onClick={handleSquareClick}
+                playerColor={player.color}
+              />
+            ))
+          )}
+        </div>
       </div>
-      <History history={history} />
+      <div className={styles.hideOnMobile}>
+        <History history={history} />
+      </div>
       <WinnerDialog
         winner={winner}
         isOpen={showWinnerDialog}
         onClose={resetBoard}
+        reason={game.status}
         isStalemate={isStalemate}
       />
       {promotionDialog}

@@ -1,5 +1,6 @@
 "use client";
 
+import { GameStatus } from "@/brain/types";
 import { useEffect } from "react";
 
 interface WinnerDialogProps {
@@ -7,9 +8,16 @@ interface WinnerDialogProps {
   isOpen: boolean;
   onClose: () => void;
   isStalemate?: boolean;
+  reason: GameStatus;
 }
 
-const WinnerDialog = ({ winner, isOpen, onClose, isStalemate }: WinnerDialogProps) => {
+const WinnerDialog = ({
+  winner,
+  isOpen,
+  onClose,
+  isStalemate,
+  reason,
+}: WinnerDialogProps) => {
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
@@ -39,6 +47,7 @@ const WinnerDialog = ({ winner, isOpen, onClose, isStalemate }: WinnerDialogProp
           justifyContent: "center",
           zIndex: 1000,
           backdropFilter: "blur(5px)",
+          padding: "20px",
         }}
         onClick={onClose}
       >
@@ -46,10 +55,10 @@ const WinnerDialog = ({ winner, isOpen, onClose, isStalemate }: WinnerDialogProp
           style={{
             backgroundColor: "#1a1a1a",
             borderRadius: "20px",
-            padding: "40px",
+            padding: "clamp(20px, 5vw, 40px)",
             textAlign: "center",
-            maxWidth: "500px",
-            width: "90%",
+            maxWidth: "min(90vw, 500px)",
+            width: "100%",
             border: "2px solid #333",
             boxShadow: "0 20px 40px rgba(0, 0, 0, 0.5)",
             animation: "slideIn 0.3s ease-out",
@@ -58,7 +67,7 @@ const WinnerDialog = ({ winner, isOpen, onClose, isStalemate }: WinnerDialogProp
         >
           <div
             style={{
-              fontSize: "4rem",
+              fontSize: "clamp(2rem, 8vw, 4rem)",
               marginBottom: "20px",
               color: "#FFD700",
               textShadow: `0 0 20px #FFD70040`,
@@ -68,7 +77,7 @@ const WinnerDialog = ({ winner, isOpen, onClose, isStalemate }: WinnerDialogProp
           </div>
           <h1
             style={{
-              fontSize: "2.5rem",
+              fontSize: "clamp(1.5rem, 4vw, 2.5rem)",
               fontWeight: "bold",
               marginBottom: "10px",
               color: "#FFFFFF",
@@ -80,13 +89,14 @@ const WinnerDialog = ({ winner, isOpen, onClose, isStalemate }: WinnerDialogProp
           </h1>
           <p
             style={{
-              fontSize: "1.2rem",
+              fontSize: "clamp(1rem, 2.5vw, 1.2rem)",
               color: "#CCCCCC",
               marginBottom: "30px",
               lineHeight: "1.5",
             }}
           >
-            The game is a draw by stalemate. No legal moves remain, and the king is not in check.
+            The game is a draw by stalemate. No legal moves remain, and the king
+            is not in check.
           </p>
           <button
             onClick={onClose}
@@ -95,8 +105,8 @@ const WinnerDialog = ({ winner, isOpen, onClose, isStalemate }: WinnerDialogProp
               color: "#FFFFFF",
               border: "none",
               borderRadius: "10px",
-              padding: "15px 30px",
-              fontSize: "1.1rem",
+              padding: "clamp(12px, 2.5vw, 15px) clamp(20px, 4vw, 30px)",
+              fontSize: "clamp(1rem, 2.5vw, 1.1rem)",
               fontWeight: "bold",
               cursor: "pointer",
               transition: "all 0.2s ease",
@@ -134,6 +144,21 @@ const WinnerDialog = ({ winner, isOpen, onClose, isStalemate }: WinnerDialogProp
   const winnerColor = winner === "white" ? "#FFFFFF" : "#000000";
   const winnerText = winner === "white" ? "White" : "Black";
 
+  const getGameStatusText = (status: GameStatus) => {
+    switch (status) {
+      case GameStatus.CHECKMATE:
+        return "Checkmate! The king has been captured.";
+      case GameStatus.STALEMATE:
+        return "Stalemate! No legal moves remain, and the king is not in check.";
+      case GameStatus.DRAW:
+        return "Draw! The game is a draw.";
+      case GameStatus.RESIGNED:
+        return `${winner === "white" ? "Black" : "White"} resigned.`;
+      default:
+        return "Game Over!";
+    }
+  };
+
   return (
     <div
       style={{
@@ -148,6 +173,7 @@ const WinnerDialog = ({ winner, isOpen, onClose, isStalemate }: WinnerDialogProp
         justifyContent: "center",
         zIndex: 1000,
         backdropFilter: "blur(5px)",
+        padding: "20px",
       }}
       onClick={onClose}
     >
@@ -155,51 +181,57 @@ const WinnerDialog = ({ winner, isOpen, onClose, isStalemate }: WinnerDialogProp
         style={{
           backgroundColor: "#1a1a1a",
           borderRadius: "20px",
-          padding: "40px",
+          padding: "clamp(20px, 5vw, 40px)",
           textAlign: "center",
-          maxWidth: "500px",
-          width: "90%",
+          maxWidth: "min(90vw, 500px)",
+          width: "100%",
           border: "2px solid #333",
           boxShadow: "0 20px 40px rgba(0, 0, 0, 0.5)",
           animation: "slideIn 0.3s ease-out",
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div
-          style={{
-            fontSize: "4rem",
-            marginBottom: "20px",
-            color: winnerColor,
-            textShadow: `0 0 20px ${winnerColor}40`,
-          }}
-        >
-          {winner === "white" ? "♔" : "♚"}
-        </div>
-        
-        <h1
-          style={{
-            fontSize: "2.5rem",
-            fontWeight: "bold",
-            marginBottom: "10px",
-            color: "#FFFFFF",
-            textTransform: "uppercase",
-            letterSpacing: "2px",
-          }}
-        >
-          {winnerText} Wins!
-        </h1>
-        
+        {reason == GameStatus.CHECKMATE ||
+          (reason === GameStatus.RESIGNED && (
+            <div
+              style={{
+                fontSize: "clamp(2rem, 8vw, 4rem)",
+                marginBottom: "20px",
+                color: winnerColor,
+                textShadow: `0 0 20px ${winnerColor}40`,
+              }}
+            >
+              {winner === "white" ? "♔" : "♚"}
+            </div>
+          ))}
+
+        {reason == GameStatus.CHECKMATE ||
+          (reason === GameStatus.RESIGNED && (
+            <h1
+              style={{
+                fontSize: "clamp(1.5rem, 4vw, 2.5rem)",
+                fontWeight: "bold",
+                marginBottom: "10px",
+                color: "#FFFFFF",
+                textTransform: "uppercase",
+                letterSpacing: "2px",
+              }}
+            >
+              {winnerText} Wins!
+            </h1>
+          ))}
+
         <p
           style={{
-            fontSize: "1.2rem",
+            fontSize: "clamp(1rem, 2.5vw, 1.2rem)",
             color: "#CCCCCC",
             marginBottom: "30px",
             lineHeight: "1.5",
           }}
         >
-          Congratulations! {winnerText} has achieved checkmate and won the game.
+          {getGameStatusText(reason)}
         </p>
-        
+
         <button
           onClick={onClose}
           style={{
@@ -207,8 +239,8 @@ const WinnerDialog = ({ winner, isOpen, onClose, isStalemate }: WinnerDialogProp
             color: "#FFFFFF",
             border: "none",
             borderRadius: "10px",
-            padding: "15px 30px",
-            fontSize: "1.1rem",
+            padding: "clamp(12px, 2.5vw, 15px) clamp(20px, 4vw, 30px)",
+            fontSize: "clamp(1rem, 2.5vw, 1.1rem)",
             fontWeight: "bold",
             cursor: "pointer",
             transition: "all 0.2s ease",
@@ -227,7 +259,7 @@ const WinnerDialog = ({ winner, isOpen, onClose, isStalemate }: WinnerDialogProp
           Close
         </button>
       </div>
-      
+
       <style jsx>{`
         @keyframes slideIn {
           from {
