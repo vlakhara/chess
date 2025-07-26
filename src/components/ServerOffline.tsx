@@ -80,27 +80,25 @@ export default function ServerOffline({ reconnectAttempts }: ServerOfflineProps)
 
       <div className={styles.content}>
         <h1 className={styles.title}>Server is Offline</h1>
-        
-        <p className={styles.message}>
-          Attempting to reconnect{dots}
-        </p>
-        
+
+        <p className={styles.message}>Attempting to reconnect{dots}</p>
+
         <div className={styles.status}>
           <div className={styles.statusDot}></div>
           <span>Connection lost</span>
         </div>
 
         <div className={styles.reconnectInfo}>
-          {reconnectAttempts > 0 && (
-            <div className={styles.countdown}>
-              <span>Next attempt in: {countdown}s</span>
-            </div>
-          )}
+          <div className={styles.countdown}>
+            <span>Next attempt in: {countdown}s</span>
+          </div>
         </div>
       </div>
 
       <div className={styles.funFacts}>
-        <p key={currentFact} className={styles.factText}>💡 {chessFacts[currentFact]}</p>
+        <p key={currentFact} className={styles.factText}>
+          💡 {chessFacts[currentFact]}
+        </p>
       </div>
     </div>
   );

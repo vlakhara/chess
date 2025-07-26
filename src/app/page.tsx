@@ -14,13 +14,11 @@ export default function Home() {
   const [game, setGame] = useState<GameState | null>(null);
   const [isSocketConnected, setIsSocketConnected] = useState<boolean>(false);
   const [reconnectAttempts, setReconnectAttempts] = useState<number>(0);
-  console.log("🔊🔊🔊🔊🔊🔊 ~ Home ~ isSocketConnected:", isSocketConnected);
 
   useEffect(() => {
     const socket = initializeSocket();
 
     if (socket) {
-      // Set initial connection state
       setIsSocketConnected(socket.readyState === WebSocket.OPEN);
 
       // Add event listeners for connection state changes
@@ -46,6 +44,9 @@ export default function Home() {
 
       // If socket is already open, set connected state
       if (socket.readyState === WebSocket.OPEN) {
+        setIsSocketConnected(true);
+      } else if (socket.readyState === WebSocket.CONNECTING) {
+        // Socket is connecting, show as connected to avoid "server offline" message
         setIsSocketConnected(true);
       }
 
