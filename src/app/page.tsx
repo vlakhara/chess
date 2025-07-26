@@ -112,7 +112,57 @@ export default function Home() {
   }
 
   if (!game || !player) {
-    return <GameJoinForm setPlayer={setPlayer} setGame={setGame} />;
+    return (
+      <>
+        <GameJoinForm setPlayer={setPlayer} setGame={setGame} />
+
+        {/* Built by credit - only shown on join form */}
+        <div
+          style={{
+            position: "fixed",
+            bottom: "10px",
+            right: "10px",
+            zIndex: 1000,
+          }}
+        >
+          <a
+            href="https://github.com/vlakhara"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              color: "#666",
+              textDecoration: "none",
+              fontSize: "12px",
+              padding: "8px 12px",
+              backgroundColor: "rgba(255, 255, 255, 0.9)",
+              borderRadius: "20px",
+              backdropFilter: "blur(10px)",
+              border: "1px solid rgba(0, 0, 0, 0.1)",
+              transition: "all 0.2s ease",
+              display: "flex",
+              alignItems: "center",
+              gap: "4px",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 1)";
+              e.currentTarget.style.transform = "translateY(-1px)";
+              e.currentTarget.style.boxShadow = "0 2px 8px rgba(0, 0, 0, 0.15)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor =
+                "rgba(255, 255, 255, 0.9)";
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "none";
+            }}
+          >
+            <span>Built by</span>
+            <span style={{ fontWeight: "bold", color: "#333" }}>
+              Vipul Lakhara
+            </span>
+          </a>
+        </div>
+      </>
+    );
   }
 
   return (
