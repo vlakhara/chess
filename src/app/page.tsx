@@ -6,7 +6,11 @@ import GameJoinForm from "@/components/GameJoinForm";
 import ServerOffline from "@/components/ServerOffline";
 import { useEffect, useState } from "react";
 import styles from "./page.module.css";
-import { initializeSocket, getReconnectAttempts } from "@/lib/socket";
+import {
+  initializeSocket,
+  getReconnectAttempts,
+  getSocketState,
+} from "@/lib/socket";
 
 export default function Home() {
   const [player, setPlayer] = useState<Player | null>(null);
@@ -14,28 +18,34 @@ export default function Home() {
   const [game, setGame] = useState<GameState | null>(null);
   const [isSocketConnected, setIsSocketConnected] = useState<boolean>(false);
   const [reconnectAttempts, setReconnectAttempts] = useState<number>(0);
+  const [socketState, setSocketState] = useState<string>("UNKNOWN");
 
   useEffect(() => {
     const socket = initializeSocket();
 
     if (socket) {
+      const currentState = getSocketState();
+      setSocketState(currentState);
       setIsSocketConnected(socket.readyState === WebSocket.OPEN);
 
       // Add event listeners for connection state changes
       const handleOpen = () => {
         console.log("Socket connected");
         setIsSocketConnected(true);
+        setSocketState("OPEN");
         setReconnectAttempts(0);
       };
 
       const handleClose = () => {
         console.log("Socket disconnected");
         setIsSocketConnected(false);
+        setSocketState("CLOSED");
       };
 
       const handleError = (error: Event) => {
         console.error("Socket error:", error);
         setIsSocketConnected(false);
+        setSocketState("ERROR");
       };
 
       socket.addEventListener("open", handleOpen);
@@ -45,9 +55,11 @@ export default function Home() {
       // If socket is already open, set connected state
       if (socket.readyState === WebSocket.OPEN) {
         setIsSocketConnected(true);
+        setSocketState("OPEN");
       } else if (socket.readyState === WebSocket.CONNECTING) {
         // Socket is connecting, show as connected to avoid "server offline" message
         setIsSocketConnected(true);
+        setSocketState("CONNECTING");
       }
 
       // Cleanup function
@@ -58,17 +70,32 @@ export default function Home() {
       };
     } else {
       setIsSocketConnected(false);
+      setSocketState("NULL");
     }
   }, []);
 
-  // Monitor reconnection attempts
+  // Monitor reconnection attempts and socket state
   useEffect(() => {
     const interval = setInterval(() => {
       setReconnectAttempts(getReconnectAttempts());
+      const currentState = getSocketState();
+      setSocketState(currentState);
+
+      // Update connection status based on current state
+      if (currentState === "OPEN") {
+        setIsSocketConnected(true);
+      } else if (currentState === "CLOSED" || currentState === "ERROR") {
+        setIsSocketConnected(false);
+      }
     }, 1000);
 
     return () => clearInterval(interval);
   }, []);
+
+  // Debug logging for socket state changes
+  useEffect(() => {
+    console.log("Socket state changed to:", socketState);
+  }, [socketState]);
 
   useEffect(() => {
     if (game && game.black && game.white) {

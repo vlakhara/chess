@@ -17,13 +17,32 @@ export const getSocket = (): WebSocket | null => {
   return socket;
 };
 
+export const getSocketState = (): string => {
+  if (!socket) return "NULL";
+
+  switch (socket.readyState) {
+    case WebSocket.CONNECTING:
+      return "CONNECTING";
+    case WebSocket.OPEN:
+      return "OPEN";
+    case WebSocket.CLOSING:
+      return "CLOSING";
+    case WebSocket.CLOSED:
+      return "CLOSED";
+    default:
+      return "UNKNOWN";
+  }
+};
+
 export const initializeSocket = (): WebSocket | null => {
   try {
-    const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || "ws://localhost:8000/chess";
-    
+    const socketUrl =
+      process.env.NEXT_PUBLIC_SOCKET_URL || "ws://localhost:8000/chess";
+
     if (!socket || socket.readyState === WebSocket.CLOSED) {
+      console.log("Initializing new WebSocket connection...");
       socket = new WebSocket(socketUrl);
-      
+
       socket.onopen = () => {
         console.log("Socket connected successfully");
         reconnectAttempts = 0;
@@ -33,8 +52,12 @@ export const initializeSocket = (): WebSocket | null => {
         }
       };
 
-      socket.onclose = () => {
-        console.log("Socket disconnected");
+      socket.onclose = (event) => {
+        console.log("Socket disconnected", {
+          code: event.code,
+          reason: event.reason,
+          wasClean: event.wasClean,
+        });
         if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
           scheduleReconnect();
         }
@@ -43,6 +66,8 @@ export const initializeSocket = (): WebSocket | null => {
       socket.onerror = (error) => {
         console.error("Socket error:", error);
       };
+    } else {
+      console.log("Socket already exists with state:", getSocketState());
     }
     return socket;
   } catch (error) {
@@ -144,3 +169,33 @@ export const onError = (callback: (error: Event) => void) => {
   }
   socket.onerror = callback;
 };
+
+export const testSocketStates = () => {
+  console.log("=== Socket State Test ===");
+  console.log("Current socket:", socket);
+  console.log("Socket state:", getSocketState());
+  console.log("Is connected:", isSocketConnected());
+  console.log("Reconnect attempts:", reconnectAttempts);
+  console.log("Max attempts:", MAX_RECONNECT_ATTEMPTS);
+
+  if (socket) {
+    console.log("WebSocket readyState:", socket.readyState);
+    console.log("WebSocket URL:", socket.url);
+    console.log("WebSocket protocol:", socket.protocol);
+    console.log("WebSocket extensions:", socket.extensions);
+  }
+
+  console.log("=== End Test ===");
+};
+
+// Export for debugging
+if (typeof window !== "undefined") {
+  const debugWindow = window as unknown as Window & {
+    testSocketStates: typeof testSocketStates;
+    getSocketState: typeof getSocketState;
+    getSocket: typeof getSocket;
+  };
+  debugWindow.testSocketStates = testSocketStates;
+  debugWindow.getSocketState = getSocketState;
+  debugWindow.getSocket = getSocket;
+}

@@ -1,14 +1,18 @@
 import { useEffect, useState } from "react";
 import styles from "./ServerOffline.module.css";
+import { getSocketState } from "@/lib/socket";
 
 interface ServerOfflineProps {
   reconnectAttempts: number;
 }
 
-export default function ServerOffline({ reconnectAttempts }: ServerOfflineProps) {
+export default function ServerOffline({
+  reconnectAttempts,
+}: ServerOfflineProps) {
   const [dots, setDots] = useState("");
   const [currentFact, setCurrentFact] = useState(0);
   const [countdown, setCountdown] = useState(30);
+  const [socketState, setSocketState] = useState<string>("UNKNOWN");
 
   const chessFacts = [
     "The longest chess game ever played lasted 269 moves!",
@@ -30,21 +34,37 @@ export default function ServerOffline({ reconnectAttempts }: ServerOfflineProps)
     "The bishop can only move on squares of the same color",
     "Chess clocks were first used in tournament play in 1883",
     "The rook is named after the Persian word for &quot;chariot&quot;",
-    "There are exactly 20 possible first moves in chess"
+    "There are exactly 20 possible first moves in chess",
   ];
 
   useEffect(() => {
     const dotsInterval = setInterval(() => {
-      setDots(prev => prev.length >= 3 ? "" : prev + ".");
+      setDots((prev) => (prev.length >= 3 ? "" : prev + "."));
     }, 500);
 
     const factInterval = setInterval(() => {
-      setCurrentFact(prev => (prev + 1) % chessFacts.length);
+      setCurrentFact((prev) => (prev + 1) % chessFacts.length);
     }, 10000);
+
+    // Monitor socket state for debugging
+    const socketStateInterval = setInterval(() => {
+      const currentState = getSocketState();
+      setSocketState(currentState);
+
+      // Log if we see any unexpected state
+      if (
+        currentState !== "CLOSED" &&
+        currentState !== "CONNECTING" &&
+        currentState !== "OPEN"
+      ) {
+        console.warn("Unexpected socket state:", currentState);
+      }
+    }, 1000);
 
     return () => {
       clearInterval(dotsInterval);
       clearInterval(factInterval);
+      clearInterval(socketStateInterval);
     };
   }, [chessFacts.length]);
 
@@ -53,7 +73,7 @@ export default function ServerOffline({ reconnectAttempts }: ServerOfflineProps)
     if (reconnectAttempts > 0) {
       setCountdown(30);
       const countdownInterval = setInterval(() => {
-        setCountdown(prev => {
+        setCountdown((prev) => {
           if (prev <= 0) {
             return 30; // Reset to 30 when it reaches 0
           }
@@ -92,6 +112,19 @@ export default function ServerOffline({ reconnectAttempts }: ServerOfflineProps)
           <div className={styles.countdown}>
             <span>Next attempt in: {countdown}s</span>
           </div>
+          {/* Debug information - remove in production */}
+          {process.env.NODE_ENV === "development" && (
+            <div
+              style={{
+                fontSize: "12px",
+                color: "#666",
+                marginTop: "10px",
+                fontFamily: "monospace",
+              }}
+            >
+              Debug: Socket State: {socketState} | Attempts: {reconnectAttempts}
+            </div>
+          )}
         </div>
       </div>
 
