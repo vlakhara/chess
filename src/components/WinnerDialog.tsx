@@ -191,35 +191,33 @@ const WinnerDialog = ({
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {reason == GameStatus.CHECKMATE ||
-          (reason === GameStatus.RESIGNED && (
-            <div
-              style={{
-                fontSize: "clamp(2rem, 8vw, 4rem)",
-                marginBottom: "20px",
-                color: winnerColor,
-                textShadow: `0 0 20px ${winnerColor}40`,
-              }}
-            >
-              {winner === "white" ? "♔" : "♚"}
-            </div>
-          ))}
+        {(reason == GameStatus.CHECKMATE || reason === GameStatus.RESIGNED) && (
+          <div
+            style={{
+              fontSize: "clamp(2rem, 8vw, 4rem)",
+              marginBottom: "20px",
+              color: winnerColor,
+              textShadow: `0 0 20px ${winnerColor}40`,
+            }}
+          >
+            {winner === "white" ? "♔" : "♚"}
+          </div>
+        )}
 
-        {reason == GameStatus.CHECKMATE ||
-          (reason === GameStatus.RESIGNED && (
-            <h1
-              style={{
-                fontSize: "clamp(1.5rem, 4vw, 2.5rem)",
-                fontWeight: "bold",
-                marginBottom: "10px",
-                color: "#FFFFFF",
-                textTransform: "uppercase",
-                letterSpacing: "2px",
-              }}
-            >
-              {winnerText} Wins!
-            </h1>
-          ))}
+        {(reason == GameStatus.CHECKMATE || reason === GameStatus.RESIGNED) && (
+          <h1
+            style={{
+              fontSize: "clamp(1.5rem, 4vw, 2.5rem)",
+              fontWeight: "bold",
+              marginBottom: "10px",
+              color: "#FFFFFF",
+              textTransform: "uppercase",
+              letterSpacing: "2px",
+            }}
+          >
+            {winnerText} Wins!
+          </h1>
+        )}
 
         <p
           style={{
